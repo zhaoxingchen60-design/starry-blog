@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章列表 - 星辰博客</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <i class="fa-solid fa-star"></i>
+                <span>星辰博客</span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/blog" class="nav-link active">文章</a>
+                <a href="/about" class="nav-link">关于我</a>
+                <a href="/contact" class="nav-link">联系我</a>
+                <a href="/write" class="nav-link nav-write-btn">
+                    <i class="fa-solid fa-pen"></i> 写文章
+                </a>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1 class="page-hero-title">文章<span class="gradient-text">列表</span></h1>
+            <p class="page-hero-desc" th:if="${activeCategory != null}">
+                分类：<span class="gradient-text" th:text="${activeCategory}"></span>
+            </p>
+            <p class="page-hero-desc" th:if="${activeCategory == null}">探索技术、生活、阅读的精彩内容</p>
+        </div>
+    </section>
+
+    <section class="section blog-section">
+        <div class="container">
+            <div class="blog-toolbar glass-card">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="搜索文章..." th:value="${searchKeyword}">
+                </div>
+                <div class="filter-tags">
+                    <a href="/blog" class="filter-btn" th:classappend="${activeCategory == null} ? 'active'">全部</a>
+                    <a th:each="cat : ${categories}" th:href="@{/blog(category=${cat})}"
+                       th:text="${cat}" th:classappend="${activeCategory == cat} ? 'active'"
+                       class="filter-btn"></a>
+                </div>
+                <div class="blog-actions">
+                    <a href="/write" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-plus"></i> 写文章
+                    </a>
+                </div>
+            </div>
+
+            <div class="posts-grid posts-grid-full" id="postsGrid">
+                <article class="post-card glass-card" th:each="post : ${posts}">
+                    <div class="post-card-image">
+                        <img th:src="${post.coverImage}" th:alt="${post.title}" loading="lazy">
+                        <div class="post-card-overlay">
+                            <a th:href="@{/post/{id}(id=${post.id})}" class="btn btn-sm btn-primary">阅读全文</a>
+                        </div>
+                    </div>
+                    <div class="post-card-body">
+                        <div class="post-card-tags">
+                            <span class="category-badge" th:classappend="'cat-' + ${post.category}" th:text="${post.category}"></span>
+                            <span class="tag" th:each="tag : ${post.tags.split(', ')}" th:text="${tag}"></span>
+                        </div>
+                        <h3 class="post-card-title">
+                            <a th:href="@{/post/{id}(id=${post.id})}" th:text="${post.title}"></a>
+                        </h3>
+                        <p class="post-card-excerpt" th:text="${post.excerpt}"></p>
+                        <div class="post-card-meta">
+                            <span><i class="fa-regular fa-calendar"></i> <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}"></span></span>
+                            <span><i class="fa-regular fa-eye"></i> <span th:text="${post.views}"></span></span>
+                            <div class="post-card-actions">
+                                <a th:href="@{/edit/{id}(id=${post.id})}" class="action-btn" title="编辑">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <form th:action="@{/delete/{id}(id=${post.id})}" method="post" style="display:inline;"
+                                      onsubmit="return confirm('确定删除这篇文章吗？')">
+                                    <button type="submit" class="action-btn action-delete" title="删除">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <div class="no-results" id="noResults" style="display:none;">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:3rem;opacity:0.3;"></i>
+                <h3>没有找到相关文章</h3>
+                <p>试试其他关键词，或者<a href="/write" style="color:var(--primary-light);">写一篇</a>吧</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3><i class="fa-solid fa-star"></i> 星辰博客</h3>
+                    <p>用代码书写世界，用文字记录生活。</p>
+                    <div class="footer-social">
+                        <a href="#" class="social-btn"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" class="social-btn"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="social-btn"><i class="fa-brands fa-weixin"></i></a>
+                        <a href="#" class="social-btn"><i class="fa-brands fa-bilibili"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>快速导航</h4>
+                    <a href="/">首页</a>
+                    <a href="/blog">文章列表</a>
+                    <a href="/write">写文章</a>
+                    <a href="/about">关于我</a>
+                    <a href="/contact">联系我</a>
+                </div>
+                <div class="footer-links">
+                    <h4>文章分类</h4>
+                    <a href="/blog?category=技术">技术</a>
+                    <a href="/blog?category=生活">生活</a>
+                    <a href="/blog?category=阅读">阅读</a>
+                    <a href="/blog?category=随笔">随笔</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span th:text="${currentYear}"></span> 星辰博客. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="backToTop">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

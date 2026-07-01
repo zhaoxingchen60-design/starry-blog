@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isEdit} ? '编辑文章 - 星辰博客' : '写文章 - 星辰博客'">写文章 - 星辰博客</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        .write-section { padding: 7rem 0 4rem; position:relative; z-index:1; }
+        .write-card { padding:2.5rem; border-radius:var(--radius-lg); max-width:900px; margin:0 auto; }
+        .write-card h1 { font-size:1.8rem; font-weight:700; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.6rem; }
+        .write-card h1 i { color:var(--primary-light); }
+        .write-form { display:flex; flex-direction:column; gap:1.2rem; }
+        .write-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+        .write-group { display:flex; flex-direction:column; gap:0.4rem; }
+        .write-group label { color:var(--text-secondary); font-size:0.85rem; font-weight:500; }
+        .write-group label i { width:16px; color:var(--primary-light); }
+        .write-group input, .write-group select, .write-group textarea {
+            padding:0.7rem 1rem; border-radius:var(--radius-sm); color:var(--text);
+            background:rgba(255,255,255,0.04); border:1px solid var(--glass-border);
+            font-family:var(--font-sans); font-size:0.95rem; transition:var(--transition);
+        }
+        .write-group input:focus, .write-group select:focus, .write-group textarea:focus {
+            outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,77,255,0.1);
+        }
+        .write-group select { cursor:pointer; }
+        .write-group select option { background:var(--bg-secondary); color:var(--text); }
+        .write-group .excerpt-input { resize:vertical; min-height:80px; }
+        .editor-container { margin-top:0.5rem; }
+        .editor-container .editor-toolbar { border-radius:var(--radius-sm) var(--radius-sm) 0 0 !important;
+            border:1px solid var(--glass-border) !important; background:rgba(255,255,255,0.03) !important; }
+        .editor-container .CodeMirror { border-radius:0 0 var(--radius-sm) var(--radius-sm) !important;
+            border:1px solid var(--glass-border) !important; border-top:none !important;
+            background:rgba(255,255,255,0.02) !important; color:var(--text) !important;
+            font-size:0.95rem; min-height:400px; }
+        .editor-container .CodeMirror-cursor { border-left-color:var(--primary-light) !important; }
+        .editor-container .CodeMirror-selected { background:rgba(124,77,255,0.2) !important; }
+        .editor-container .editor-toolbar a { color:var(--text-secondary) !important; }
+        .editor-container .editor-toolbar a:hover, .editor-container .editor-toolbar a.active { color:var(--primary-light) !important; background:rgba(124,77,255,0.1) !important; }
+        .editor-container .editor-toolbar i.separator { border-left-color:var(--glass-border) !important; }
+        .editor-preview-side { background:var(--bg-secondary) !important; border-color:var(--glass-border) !important; }
+        .write-actions { display:flex; gap:0.8rem; justify-content:flex-end; margin-top:1rem; }
+        @media (max-width:768px) { .write-row { grid-template-columns:1fr; } .write-card { padding:1.5rem; } }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    <div class="orb orb-1"></div><div class="orb orb-2"></div>
+
+    <nav class="navbar scrolled" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo"><i class="fa-solid fa-star"></i><span>星辰博客</span></a>
+            <div class="nav-links" id="navLinks">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/blog" class="nav-link">文章</a>
+                <a href="/about" class="nav-link">关于我</a>
+                <a href="/contact" class="nav-link">联系我</a>
+            </div>
+            <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+        </div>
+    </nav>
+
+    <section class="write-section">
+        <div class="container">
+            <div class="write-card glass-card">
+                <h1>
+                    <i class="fa-solid" th:classappend="${isEdit} ? 'fa-pen-to-square' : 'fa-feather-pointed'"></i>
+                    <span th:text="${isEdit} ? '编辑文章' : '写文章'">写文章</span>
+                </h1>
+                <form class="write-form" th:action="@{/save}" method="post">
+                    <input type="hidden" name="id" th:value="${article.id}">
+                    <div class="write-row">
+                        <div class="write-group">
+                            <label><i class="fa-solid fa-heading"></i> 文章标题</label>
+                            <input type="text" name="title" th:value="${article.title}" placeholder="输入文章标题..." required>
+                        </div>
+                        <div class="write-group">
+                            <label><i class="fa-solid fa-layer-group"></i> 分类</label>
+                            <select name="category" required>
+                                <option value="">选择分类...</option>
+                                <option value="技术" th:selected="${article.category == '技术'}">技术</option>
+                                <option value="生活" th:selected="${article.category == '生活'}">生活</option>
+                                <option value="阅读" th:selected="${article.category == '阅读'}">阅读</option>
+                                <option value="随笔" th:selected="${article.category == '随笔'}">随笔</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="write-row">
+                        <div class="write-group">
+                            <label><i class="fa-solid fa-tags"></i> 标签（逗号分隔）</label>
+                            <input type="text" name="tags" th:value="${article.tags}" placeholder="例如：Java, 教程, 后端">
+                        </div>
+                        <div class="write-group">
+                            <label><i class="fa-solid fa-image"></i> 封面图片URL</label>
+                            <input type="url" name="coverImage" th:value="${article.coverImage}" placeholder="https://... (留空使用默认图)">
+                        </div>
+                    </div>
+                    <div class="write-group">
+                        <label><i class="fa-solid fa-align-left"></i> 摘要（留空自动生成）</label>
+                        <textarea class="excerpt-input" name="excerpt" th:text="${article.excerpt}" placeholder="文章摘要..."></textarea>
+                    </div>
+                    <div class="write-group">
+                        <label><i class="fa-brands fa-markdown"></i> 正文（Markdown 格式）</label>
+                        <div class="editor-container">
+                            <textarea id="mdEditor" name="content" th:text="${article.content}"></textarea>
+                        </div>
+                    </div>
+                    <div class="write-actions">
+                        <a href="/blog" class="btn btn-outline btn-glass">取消</a>
+                        <button type="submit" class="btn btn-primary btn-glow">
+                            <i class="fa-solid fa-paper-plane"></i> 发布文章
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3><i class="fa-solid fa-star"></i> 星辰博客</h3>
+                    <p>用代码书写世界，用技术改变未来。</p>
+                </div>
+                <div class="footer-links">
+                    <h4>快速导航</h4>
+                    <a href="/">首页</a><a href="/blog">文章列表</a><a href="/about">关于我</a><a href="/contact">联系我</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span th:text="${currentYear}"></span> 星辰博客. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script>
+        var simplemde = new SimpleMDE({
+            element: document.getElementById("mdEditor"),
+            spellChecker: false,
+            placeholder: "使用 Markdown 格式书写...",
+            status: ["lines", "words", "cursor"],
+            autosave: { enabled: false },
+            renderingConfig: { codeSyntaxHighlighting: true },
+            toolbar: ["bold","italic","heading","|","quote","unordered-list","ordered-list","|","link","image","table","|","preview","side-by-side","fullscreen","|","guide"]
+        });
+    </script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

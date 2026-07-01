@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 星辰博客</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 3rem 2.5rem;
+            border-radius: var(--radius-xl);
+            text-align: center;
+            position: relative;
+            animation: loginIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes loginIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* 卡片发光边框 */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: var(--gradient-primary);
+            z-index: -1;
+            opacity: 0.3;
+            transition: opacity 0.6s;
+        }
+        .login-card:hover::before { opacity: 0.6; }
+
+        .login-card::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: var(--gradient-primary);
+            z-index: -1;
+            opacity: 0;
+            filter: blur(24px);
+            transition: opacity 0.6s;
+        }
+        .login-card:hover::after { opacity: 0.35; }
+
+        .login-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(124, 77, 255, 0.4);
+            position: relative;
+        }
+        .login-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            border: 2px solid rgba(124, 77, 255, 0.3);
+            animation: avatarPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes avatarPulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50%      { transform: scale(1.18); opacity: 0; }
+        }
+
+        .login-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 0.4rem;
+        }
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .login-form { text-align: left; }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.8rem;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.12);
+        }
+        .input-wrapper input:focus + i,
+        .input-wrapper:focus-within i { color: var(--primary-light); }
+
+        .input-wrapper input::placeholder { color: var(--text-muted); }
+
+        .login-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            font-size: 0.82rem;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .remember-me input[type="checkbox"] {
+            appearance: none;
+            width: 16px; height: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+        .remember-me input[type="checkbox"]:checked {
+            background: var(--gradient-primary);
+            border-color: transparent;
+        }
+        .remember-me input[type="checkbox"]:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: #fff;
+            font-size: 0.55rem;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .forgot-link {
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+        .forgot-link:hover { color: var(--primary-light); }
+
+        .login-btn {
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            border: none;
+            border-radius: 50px;
+            background: var(--gradient-primary);
+            color: #fff;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 20px rgba(124, 77, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(124, 77, 255, 0.55);
+        }
+        .login-btn:active { transform: scale(0.98); }
+
+        /* 错误消息 */
+        .login-error {
+            background: rgba(255, 64, 129, 0.1);
+            border: 1px solid rgba(255, 64, 129, 0.25);
+            color: #ff4081;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: shake 0.5s ease;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%      { transform: translateX(-6px); }
+            40%      { transform: translateX(6px); }
+            60%      { transform: translateX(-4px); }
+            80%      { transform: translateX(4px); }
+        }
+
+        .login-footer {
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+        .login-footer a {
+            color: var(--primary-light);
+            transition: var(--transition);
+        }
+        .login-footer a:hover { color: var(--accent); }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="login-wrapper">
+        <div class="login-card glass-card">
+            <div class="login-avatar">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h1 class="login-title">Welcome<span class="gradient-text"> Back</span></h1>
+            <p class="login-subtitle">登录以继续访问星辰博客</p>
+
+            <div class="login-error" th:if="${param.error}">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>用户名或密码错误，请重试。</span>
+            </div>
+
+            <form class="login-form" th:action="@{/login}" method="post">
+                <div class="input-group">
+                    <label>用户名</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" name="username" placeholder="请输入用户名" required autofocus>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-key"></i>
+                        <input type="password" name="password" placeholder="请输入密码" required>
+                    </div>
+                </div>
+
+                <div class="login-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember-me">
+                        记住我
+                    </label>
+                    <a href="#" class="forgot-link">忘记密码?</a>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i> 登 录
+                </button>
+            </form>
+
+            <p class="login-footer">
+                <a href="/"><i class="fa-solid fa-arrow-left"></i> 返回首页</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>
